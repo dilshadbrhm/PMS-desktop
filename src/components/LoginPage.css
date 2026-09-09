@@ -1,0 +1,415 @@
+/* ═══════════════════════════════════════════════════════════════
+   LoginPage.css — PMS Desktop Login
+   ═══════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* ── Root layout ─────────────────────────────────────────────── */
+.lp-root {
+  display: flex;
+  min-height: 100vh;
+  font-family: 'Inter', system-ui, sans-serif;
+  background: #0d0e14;
+  color: #e2e4ef;
+}
+
+/* ── Brand panel (left) ──────────────────────────────────────── */
+.lp-brand {
+  position: relative;
+  flex: 1 1 55%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 64px;
+  background: linear-gradient(135deg, #0f1020 0%, #151730 60%, #1a1040 100%);
+  overflow: hidden;
+}
+
+.lp-brand-inner {
+  position: relative;
+  z-index: 1;
+  max-width: 440px;
+}
+
+/* Decorative blobs */
+.lp-brand-blur {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  pointer-events: none;
+}
+.lp-brand-blur--1 {
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.35) 0%, transparent 70%);
+  top: -80px;
+  right: -60px;
+}
+.lp-brand-blur--2 {
+  width: 320px;
+  height: 320px;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.25) 0%, transparent 70%);
+  bottom: -40px;
+  left: 30px;
+}
+
+/* Logo */
+.lp-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 40px;
+}
+.lp-logo-text {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: #fff;
+}
+
+/* Headlines */
+.lp-headline {
+  font-size: clamp(28px, 3vw, 40px);
+  font-weight: 700;
+  line-height: 1.2;
+  color: #fff;
+  margin: 0 0 16px;
+  letter-spacing: -0.5px;
+}
+.lp-sub {
+  font-size: 15px;
+  line-height: 1.65;
+  color: #8b90af;
+  margin: 0 0 40px;
+}
+
+/* Feature list */
+.lp-features {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.lp-features li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  color: #9ca3c8;
+}
+.lp-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(99, 102, 241, 0.2);
+  color: #818cf8;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* ── Form panel (right) ──────────────────────────────────────── */
+.lp-form-panel {
+  flex: 0 0 460px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 40px;
+  background: #11121a;
+  border-left: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* ── Card ────────────────────────────────────────────────────── */
+.lp-card {
+  width: 100%;
+  max-width: 380px;
+}
+
+.lp-card-header {
+  margin-bottom: 32px;
+}
+.lp-card-header h2 {
+  font-size: 26px;
+  font-weight: 700;
+  color: #fff;
+  margin: 0 0 6px;
+  letter-spacing: -0.3px;
+}
+.lp-card-header p {
+  font-size: 14px;
+  color: #6b7290;
+  margin: 0;
+}
+
+/* ── Fields ──────────────────────────────────────────────────── */
+.lp-field {
+  margin-bottom: 18px;
+}
+
+.lp-field label,
+.lp-captcha-label-row label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: #9ca3c8;
+  margin-bottom: 7px;
+}
+
+.lp-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.lp-input-icon {
+  position: absolute;
+  left: 14px;
+  color: #4b5280;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+}
+
+.lp-input-wrap input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 11px 44px 11px 40px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  color: #e2e4ef;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.18s, box-shadow 0.18s, background 0.18s;
+}
+
+.lp-input-wrap input::placeholder {
+  color: #3d4265;
+}
+
+.lp-input-wrap input:focus {
+  border-color: rgba(99, 102, 241, 0.7);
+  background: rgba(99, 102, 241, 0.05);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.lp-input-wrap input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Eye toggle */
+.lp-eye-btn {
+  position: absolute;
+  right: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #4b5280;
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  border-radius: 4px;
+  transition: color 0.15s;
+}
+.lp-eye-btn:hover { color: #818cf8; }
+
+/* ── Captcha ─────────────────────────────────────────────────── */
+.lp-captcha-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 7px;
+}
+
+.lp-refresh-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  color: #6366f1;
+  font-family: inherit;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: color 0.15s, background 0.15s;
+}
+.lp-refresh-btn:hover:not(:disabled) {
+  color: #818cf8;
+  background: rgba(99, 102, 241, 0.1);
+}
+.lp-refresh-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.lp-captcha-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 10px 14px;
+  transition: border-color 0.18s;
+}
+.lp-captcha-box:focus-within {
+  border-color: rgba(99, 102, 241, 0.7);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.lp-captcha-sual {
+  flex: 1;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 90px;
+}
+.lp-captcha-math {
+  color: #a5b4fc;
+  font-variant-numeric: tabular-nums;
+}
+.lp-captcha-eq {
+  color: #4b5280;
+}
+
+.lp-captcha-skeleton {
+  display: block;
+  height: 22px;
+  width: 80px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #1f2135 25%, #252840 50%, #1f2135 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+}
+
+.lp-captcha-input {
+  width: 72px;
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  color: #e2e4ef;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  text-align: center;
+  border-left: 1px solid rgba(255, 255, 255, 0.07);
+  padding-left: 12px;
+}
+.lp-captcha-input::placeholder { color: #3d4265; }
+/* Remove number input arrows */
+.lp-captcha-input::-webkit-outer-spin-button,
+.lp-captcha-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.lp-captcha-input[type=number] { -moz-appearance: textfield; }
+
+/* ── Error ───────────────────────────────────────────────────── */
+.lp-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: #f87171;
+  font-size: 13px;
+  margin-bottom: 16px;
+  animation: fadeIn 0.2s ease;
+}
+
+/* ── Submit button ───────────────────────────────────────────── */
+.lp-submit {
+  width: 100%;
+  padding: 13px 20px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  letter-spacing: 0.2px;
+  transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.35);
+  margin-top: 8px;
+}
+.lp-submit:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 28px rgba(99, 102, 241, 0.5);
+}
+.lp-submit:active:not(:disabled) {
+  transform: translateY(0);
+}
+.lp-submit:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* ── Spinner ─────────────────────────────────────────────────── */
+.lp-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+/* ── Footer ──────────────────────────────────────────────────── */
+.lp-footer {
+  margin-top: 32px;
+  font-size: 12px;
+  color: #3d4265;
+}
+
+/* ── Animations ──────────────────────────────────────────────── */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.spin {
+  animation: spin 0.8s linear infinite;
+}
+
+/* ── Responsive ──────────────────────────────────────────────── */
+@media (max-width: 860px) {
+  .lp-root { flex-direction: column; }
+  .lp-brand {
+    padding: 40px 32px;
+    flex: none;
+  }
+  .lp-features { display: none; }
+  .lp-form-panel {
+    flex: none;
+    border-left: none;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    padding: 40px 24px;
+  }
+}

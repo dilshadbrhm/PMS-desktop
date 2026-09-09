@@ -1,0 +1,607 @@
+/* ── Root ───────────────────────────────────────────────────────────────── */
+.cp-root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 480px;
+  background: #0d0e14;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.06);
+  overflow: hidden;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* ── Üst zolaq: Üzvlər və Onlayn statusu ───────────────────────────────── */
+.cp-members-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: #11131c;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.cp-members-bar::-webkit-scrollbar { display: none; }
+
+.cp-members-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #4b5280;
+  flex-shrink: 0;
+}
+
+.cp-members-list {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;
+}
+
+.cp-member-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 99px;
+  font-size: 12px;
+  color: #94a3b8;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.cp-member-pill--online {
+  background: rgba(34, 197, 94, 0.08);
+  border-color: rgba(34, 197, 94, 0.25);
+  color: #e2e8f0;
+}
+
+.cp-presence-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #475569;
+  flex-shrink: 0;
+}
+
+.cp-presence-dot--online {
+  background: #22c55e;
+  box-shadow: 0 0 6px rgba(34, 197, 94, 0.7);
+}
+
+.cp-member-name {
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Mesaj axını ────────────────────────────────────────────────────────── */
+.cp-feed {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(99,102,241,0.25) transparent;
+}
+
+.cp-feed::-webkit-scrollbar       { width: 4px; }
+.cp-feed::-webkit-scrollbar-track { background: transparent; }
+.cp-feed::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.3); border-radius: 99px; }
+
+/* ── State (loading/error/empty) ────────────────────────────────────────── */
+.cp-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex: 1;
+  min-height: 200px;
+  color: #475569;
+  font-size: 13.5px;
+  text-align: center;
+}
+
+.cp-state--error { color: #f87171; }
+
+.cp-spinner {
+  width: 28px;
+  height: 28px;
+  border: 2.5px solid rgba(99,102,241,0.2);
+  border-top-color: #6366f1;
+  border-radius: 50%;
+  animation: cpSpin 0.75s linear infinite;
+}
+
+@keyframes cpSpin { to { transform: rotate(360deg); } }
+
+.cp-retry-btn {
+  background: rgba(99,102,241,0.12);
+  border: 1px solid rgba(99,102,241,0.3);
+  color: #a5b4fc;
+  font-family: inherit;
+  font-size: 12.5px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.cp-retry-btn:hover {
+  background: rgba(99,102,241,0.22);
+  color: #fff;
+}
+
+.cp-empty-icon {
+  font-size: 34px;
+  margin-bottom: 4px;
+}
+
+.cp-empty-hint {
+  font-size: 12px;
+  color: #2d3548;
+}
+
+/* ── Bubble wrapper ─────────────────────────────────────────────────────── */
+.cp-bubble-wrap {
+  display: flex;
+  flex-direction: column;
+  max-width: 75%;
+  animation: cpFadeIn 0.18s ease;
+}
+
+@keyframes cpFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Öz mesajları sağda */
+.cp-mine   { align-self: flex-end;   align-items: flex-end; }
+/* Başqalarının mesajları solda */
+.cp-theirs { align-self: flex-start; align-items: flex-start; }
+
+/* Göndərən adı və onlayn nöqtəsi */
+.cp-sender-name {
+  font-size: 11px;
+  font-weight: 600;
+  color: #818cf8;
+  margin-bottom: 3px;
+  padding-left: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.cp-sender-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 6px rgba(34, 197, 94, 0.7);
+  display: inline-block;
+}
+
+/* ── Bubble əsas gövdə ─────────────────────────────────────────────────── */
+.cp-bubble {
+  position: relative;
+  padding: 9px 13px 7px;
+  border-radius: 16px;
+  font-size: 13.5px;
+  word-break: break-word;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+/* Öz bubble-ı (bənövşəyi gradient) */
+.cp-bubble--mine {
+  background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+  color: #fff;
+  border-bottom-right-radius: 4px;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+/* Başqasının bubble-ı (tünd boz/bənövşəyi) */
+.cp-bubble--theirs {
+  background: #191b29;
+  color: #e2e4ef;
+  border-bottom-left-radius: 4px;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+/* Silinmiş mesaj bubble-ı */
+.cp-bubble--deleted {
+  opacity: 0.55;
+  font-style: italic;
+}
+
+/* ── Mətn ───────────────────────────────────────────────────────────────── */
+.cp-text {
+  margin: 0 0 4px;
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.cp-bubble--mine .cp-text { color: #fff; }
+
+.cp-deleted-text {
+  font-size: 13px;
+  color: rgba(255,255,255,0.45);
+}
+
+/* ── Fayl Kartı ─────────────────────────────────────────────────────────── */
+.cp-file-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(0,0,0,0.2);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  padding: 8px 12px;
+  margin-bottom: 5px;
+  min-width: 200px;
+  max-width: 320px;
+}
+
+.cp-file-icon {
+  color: #a5b4fc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cp-file-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cp-file-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cp-file-size {
+  font-size: 11px;
+  color: rgba(255,255,255,0.6);
+}
+
+.cp-file-btn {
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: #fff;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.cp-file-btn:hover:not(:disabled) {
+  background: rgba(255,255,255,0.22);
+  transform: scale(1.05);
+}
+
+.cp-file-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Səs Pleyeri ────────────────────────────────────────────────────────── */
+.cp-voice-player {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 4px;
+  min-width: 230px;
+}
+
+.cp-voice-player audio {
+  width: 100%;
+  height: 34px;
+  border-radius: 8px;
+  outline: none;
+}
+
+.cp-voice-time {
+  font-size: 10.5px;
+  color: rgba(255,255,255,0.6);
+  align-self: flex-end;
+}
+
+.cp-voice-loader, .cp-voice-error {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.7);
+  padding: 6px 0;
+}
+
+/* ── Metadata (vaxt, redaktə, oxundu) ───────────────────────────────────── */
+.cp-meta {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  justify-content: flex-end;
+  margin-top: 3px;
+}
+
+.cp-time {
+  font-size: 10px;
+  opacity: 0.65;
+}
+
+.cp-edited {
+  font-size: 10px;
+  opacity: 0.5;
+  font-style: italic;
+}
+
+.cp-private-badge {
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+/* Oxundu / Göndərildi ikonları */
+.cp-receipt {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+  margin-left: 2px;
+}
+
+.cp-receipt--sent {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.cp-receipt--read {
+  color: #38bdf8; /* Mavi WhatsApp-vari iki xətli qəbz */
+}
+
+/* ── "Yazır..." Animasiyalı Göstəricisi ─────────────────────────────────── */
+.cp-typing-indicator {
+  align-self: flex-start;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  background: #141622;
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 14px;
+  margin-top: 4px;
+  animation: cpFadeIn 0.2s ease;
+}
+
+.cp-typing-dots {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.cp-typing-dots span {
+  width: 5px;
+  height: 5px;
+  background: #818cf8;
+  border-radius: 50%;
+  animation: cpTypingBounce 1.2s infinite ease-in-out;
+}
+
+.cp-typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+.cp-typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes cpTypingBounce {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+  40%           { transform: scale(1.1); opacity: 1; }
+}
+
+.cp-typing-text {
+  font-size: 11.5px;
+  color: #94a3b8;
+  font-style: italic;
+}
+
+/* ── Canlı Səs Yazma Paneli ────────────────────────────────────────────── */
+.cp-recording-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: rgba(239, 68, 68, 0.12);
+  border-top: 1px solid rgba(239, 68, 68, 0.25);
+  animation: cpFadeIn 0.2s ease;
+}
+
+.cp-recording-pulse {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ef4444;
+  box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  animation: cpPulse 1.2s infinite;
+}
+
+@keyframes cpPulse {
+  0%   { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+  70%  { transform: scale(1.1);  box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+.cp-recording-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #f87171;
+}
+
+.cp-recording-timer {
+  font-family: monospace;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(0,0,0,0.3);
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.cp-recording-hint {
+  font-size: 11.5px;
+  color: #94a3b8;
+  margin-left: auto;
+}
+
+/* ── Göndərmə xətası ─────────────────────────────────────────────────────── */
+.cp-send-error {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 12px 8px;
+  padding: 8px 12px;
+  background: rgba(239,68,68,0.1);
+  border: 1px solid rgba(239,68,68,0.25);
+  border-radius: 8px;
+  font-size: 12.5px;
+  color: #f87171;
+  animation: cpShake 0.35s ease;
+}
+
+@keyframes cpShake {
+  0%,100% { transform: translateX(0); }
+  25%     { transform: translateX(-4px); }
+  75%     { transform: translateX(4px); }
+}
+
+/* ── Input bar ──────────────────────────────────────────────────────────── */
+.cp-input-bar {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 12px 14px;
+  border-top: 1px solid rgba(255,255,255,0.05);
+  background: #0d0e14;
+}
+
+/* Alət düymələri (📎 və 🎤) */
+.cp-tool-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: #141622;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.cp-tool-btn:hover:not(:disabled) {
+  background: #1e2133;
+  color: #fff;
+  border-color: rgba(99,102,241,0.3);
+}
+
+.cp-tool-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.cp-tool-btn--rec {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+.cp-tool-btn--rec:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.3);
+  color: #fff;
+}
+
+.cp-input {
+  flex: 1;
+  background: #13141f;
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 12px;
+  padding: 10px 14px;
+  color: #e2e4ef;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 13.5px;
+  line-height: 1.5;
+  resize: none;
+  outline: none;
+  transition: border-color 0.15s ease;
+  max-height: 120px;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.cp-input::-webkit-scrollbar { display: none; }
+
+.cp-input::placeholder { color: #3b4259; }
+
+.cp-input:focus {
+  border-color: rgba(99,102,241,0.4);
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.08);
+}
+
+.cp-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Göndər düyməsi ─────────────────────────────────────────────────────── */
+.cp-send-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: opacity 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 0 3px 12px rgba(99,102,241,0.4);
+}
+
+.cp-send-btn:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: scale(1.05);
+  box-shadow: 0 4px 16px rgba(99,102,241,0.55);
+}
+
+.cp-send-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.cp-send-spinner, .cp-btn-spinner {
+  display: block;
+  width: 15px;
+  height: 15px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: cpSpin 0.7s linear infinite;
+}

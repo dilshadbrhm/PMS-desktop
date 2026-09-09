@@ -1,0 +1,1931 @@
+{
+  "info": {
+    "name": "PMS (Open Projects) — Backend API",
+    "description": "PMS backend-inin TAM API kolleksiyası (NestJS).\n\n## Quruluş\n1. `host` dəyişəni: https://pms.azerenerji.az (və ya lokal http://localhost:3000)\n2. `base` = {{host}}/api/v1 (avtomatik)\n3. **Auth**: 1·Auth → 'Captcha al' → konsolda çıxan sualı həll et → nəticəni `captcha` dəyişəninə yaz → 'Login'. Login həm httpOnly cookie yazır (brauzer üçün), həm də body-də `accessToken` qaytarır. Kolleksiya bu token-i {{token}}-ə saxlayıb hər sorğuda `Authorization: Bearer {{token}}` göndərir — yəni API/xarici sistem üçün Bearer, brauzer üçün cookie işləyir.\n\n## 🆕 Yeni API-lər\nƏn aşağıdakı **🆕 YENİ API-lər** qutusuna bax — orijinal sənəddən sonra əlavə olunanlar (chat oxunmamış bildirişi + görüş/zəng) oradadır.\n\n## Qeydlər\n- `:param` dəyərləri kolleksiya dəyişənləridir (projectId, taskId, userId, mesajId, meetingId, recordId...).\n- Rol tələbləri sorğu təsvirlərindədir (Manager/Menecer/Admin).\n- Chat mətn mesajı və ZƏNG signalı REST deyil — Socket.io /chat (5·Chat qovluğunun təsvirinə bax).\n",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1 · Auth",
+      "item": [
+        {
+          "name": "Captcha al",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base}}/auth/captcha",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "auth",
+                "captcha"
+              ]
+            },
+            "description": "Login-dən ƏVVƏL çağırılır. Cavabdakı `token` avtomatik {{captchaToken}}-ə yazılır (test script). `sual`-ı (məs '1 + 2') həll edib nəticəni {{captcha}} dəyişəninə yaz."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = pm.response.json();",
+                  "pm.collectionVariables.set('captchaToken', j.token);",
+                  "console.log('CAPTCHA sualı:', j.sual, '→ nəticəni {{captcha}} dəyişəninə yaz');"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base}}/auth/login",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Uğurda: (1) httpOnly cookie yazılır (brauzer), (2) cavab body-də accessToken qaytarılır. Test script accessToken-i {{token}} dəyişəninə yazır; kolleksiya bütün sorğularda `Authorization: Bearer {{token}}` göndərir. Yəni HƏM cookie, HƏM Bearer işləyir.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"admin\",\n  \"password\": \"123\",\n  \"captchaToken\": \"{{captchaToken}}\",\n  \"captcha\": \"{{captcha}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = pm.response.json();",
+                  "if (j.accessToken) { pm.collectionVariables.set('token', j.accessToken); console.log('accessToken saxlanıldı → {{token}}'); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cari istifadəçi (men)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base}}/auth/men",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "auth",
+                "men"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Token yenilə (refresh)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base}}/auth/refresh",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "auth",
+                "refresh"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Parol dəyiş",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base}}/auth/parol",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "auth",
+                "parol"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"kohne123\",\n  \"newPassword\": \"yeniparol8\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base}}/auth/logout",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "description": "Sessiya httpOnly cookie ilədir (Bearer YOX). Ardıcıllıq: Captcha al → sualı həll et → {{captcha}} yaz → Login."
+    },
+    {
+      "name": "2 · Layihələr",
+      "item": [
+        {
+          "name": "Siyahı (mənim layihələrim)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base}}/projects",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "projects"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Yarat (Manager)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base}}/projects",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "projects"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Yeni layihə\",\n  \"description\": \"Təsvir\",\n  \"start_at\": \"2026-09-01T09:00:00.000Z\",\n  \"end_at\": \"2026-12-01T18:00:00.000Z\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Detal",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base}}/projects/{{projectId}}",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "projects",
+                "{{projectId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Timeline (audit)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base}}/projects/{{projectId}}/timeline",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "projects",
+                "{{projectId}}",
+                "timeline"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Yenilə (Menecer)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base}}/projects/{{projectId}}",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "projects",
+                "{{projectId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Dəyişmiş ad\",\n  \"description\": \"Yeni təsvir\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Bağla (Menecer)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base}}/projects/{{projectId}}/bagla",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "projects",
+                "{{projectId}}",
+                "bagla"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3 · Üzvlər",
+      "item": [
+        {
+          "name": "Siyahı",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base}}/projects/{{projectId}}/members",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "projects",
+                "{{projectId}}",
+                "members"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Axtar (Menecer)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base}}/projects/{{projectId}}/members/axtar?q=ali",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "projects",
+                "{{projectId}}",
+                "members",
+                "axtar"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "ali"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Əlavə et (Menecer)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base}}/projects/{{projectId}}/members",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "projects",
+                "{{projectId}}",
+                "members"
+              ]
+            },
+            "description": "role: 2=Menecer, 3=İstifadəçi, 4=Ghost",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": 5,\n  \"role\": 3\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Rol dəyiş (Menecer)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base}}/projects/{{projectId}}/members/{{userId}}",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "projects",
+                "{{projectId}}",
+                "members",
+                "{{userId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": 2\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Sil (Menecer)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base}}/projects/{{projectId}}/members/{{userId}}",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "projects",
+                "{{projectId}}",
+                "members",
+                "{{userId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "4 · Tapşırıqlar",
+      "item": [
+        {
+          "name": "Siyahı",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base}}/projects/{{projectId}}/tasks",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "projects",
+                "{{projectId}}",
+                "tasks"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Detal",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base}}/projects/{{projectId}}/tasks/{{taskId}}",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "projects",
+                "{{projectId}}",
+                "tasks",
+                "{{taskId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Yarat",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base}}/projects/{{projectId}}/tasks",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "projects",
+                "{{projectId}}",
+                "tasks"
+              ]
+            },
+            "description": "İstifadəçi yalnız özünə task yarada bilər; ceki (1-5) yalnız Menecer.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Yeni task\",\n  \"description\": \"Təsvir\",\n  \"assigneeId\": 5,\n  \"start_at\": \"2026-09-05T09:00:00.000Z\",\n  \"deadline\": \"2026-09-20T18:00:00.000Z\",\n  \"ceki\": 3\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Yenilə (Menecer)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base}}/projects/{{projectId}}/tasks/{{taskId}}",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "projects",
+                "{{projectId}}",
+                "tasks",
+                "{{taskId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Dəyişmiş\",\n  \"assigneeId\": 6,\n  \"deadline\": null,\n  \"ceki\": 4\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Status dəyiş",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base}}/projects/{{projectId}}/tasks/{{taskId}}/status",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "projects",
+                "{{projectId}}",
+                "tasks",
+                "{{taskId}}",
+                "status"
+              ]
+            },
+            "description": "1=Açıq, 2=İcrada, 3=Bitib (Bitib yalnız Menecer).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": 2\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Sil (Menecer)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base}}/projects/{{projectId}}/tasks/{{taskId}}",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "projects",
+                "{{projectId}}",
+                "tasks",
+                "{{taskId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "5 · Chat",
+      "item": [
+        {
+          "name": "Tarixçə",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base}}/projects/{{projectId}}/chat?limit=30&beforeId=",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "projects",
+                "{{projectId}}",
+                "chat"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "30"
+                },
+                {
+                  "key": "beforeId",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Cursor pagination: beforeId-dən köhnə mesajlar; limit 1-100 (default 30). Mətn mesajı WebSocket-lədir (aşağıdakı qeydə bax)."
+          },
+          "response": []
+        },
+        {
+          "name": "Səsli mesaj göndər",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base}}/projects/{{projectId}}/chat/ses",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "projects",
+                "{{projectId}}",
+                "chat",
+                "ses"
+              ]
+            },
+            "description": "multipart/form-data. Sahələr: ses (fayl), muddet (san), isPrivate, recipientId.",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "ses",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "muddet",
+                  "value": "5",
+                  "type": "text"
+                },
+                {
+                  "key": "isPrivate",
+                  "value": "false",
+                  "type": "text"
+                },
+                {
+                  "key": "recipientId",
+                  "value": "",
+                  "type": "text",
+                  "disabled": true
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Fayl göndər",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base}}/projects/{{projectId}}/chat/fayl",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "projects",
+                "{{projectId}}",
+                "chat",
+                "fayl"
+              ]
+            },
+            "description": "multipart/form-data. Sahələr: fayl (fayl), isPrivate, recipientId. Maks 50MB; video yalnız mp4/webm.",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "fayl",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "isPrivate",
+                  "value": "false",
+                  "type": "text"
+                },
+                {
+                  "key": "recipientId",
+                  "value": "",
+                  "type": "text",
+                  "disabled": true
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Fayl endir/oxut",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base}}/projects/{{projectId}}/chat/fayl/{{mesajId}}",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "projects",
+                "{{projectId}}",
+                "chat",
+                "fayl",
+                "{{mesajId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Səs oxut",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base}}/projects/{{projectId}}/chat/ses/{{mesajId}}",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "projects",
+                "{{projectId}}",
+                "chat",
+                "ses",
+                "{{mesajId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Kim oxudu (oxunma)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base}}/projects/{{projectId}}/chat/{{mesajId}}/oxunma",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "projects",
+                "{{projectId}}",
+                "chat",
+                "{{mesajId}}",
+                "oxunma"
+              ]
+            },
+            "description": "Yalnız mesajın göndərəni. Cavab: {oxuyanlar[], oxumayanlar[]}."
+          },
+          "response": []
+        }
+      ],
+      "description": "Mətn mesajı, redaktə/silmə, 'yazır', oxundu, presence və ZƏNG signalı Socket.io /chat namespace-dədir (REST deyil) — Postman WebSocket request ilə wss://pms.azerenerji.az/chat, hadisələr: mesajGonder, oxundu, yaziriq, zengBaslat, zengCavab."
+    },
+    {
+      "name": "6 · Bildirişlər",
+      "item": [
+        {
+          "name": "Oxunmamışlar + say",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base}}/notifications",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "notifications"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Detal (oxunmuş sayılır)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base}}/notifications/{{notifId}}",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "notifications",
+                "{{notifId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Oxunmuş işarələ",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{base}}/notifications/{{notifId}}/read",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "notifications",
+                "{{notifId}}",
+                "read"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "7 · Dashboard",
+      "item": [
+        {
+          "name": "Statistika",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base}}/dashboard",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "dashboard"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "8 · Favoritlər",
+      "item": [
+        {
+          "name": "Favorit toggle",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base}}/favorites/{{userId}}",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "favorites",
+                "{{userId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"secilmis\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "9 · Təkliflər / İradlar",
+      "item": [
+        {
+          "name": "Göndər",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base}}/teklifler",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "teklifler"
+              ]
+            },
+            "description": "tip: 'teklif' | 'irad'.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tip\": \"teklif\",\n  \"mesaj\": \"Təklifim...\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Siyahı (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base}}/teklifler?suzgec=oxunmamis",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "teklifler"
+              ],
+              "query": [
+                {
+                  "key": "suzgec",
+                  "value": "oxunmamis",
+                  "disabled": true
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Say (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base}}/teklifler/say",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "teklifler",
+                "say"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Oxundu (Admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{base}}/teklifler/{{teklifId}}/oxundu",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "teklifler",
+                "{{teklifId}}",
+                "oxundu"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "10 · AI analiz",
+      "item": [
+        {
+          "name": "Rejim vəziyyəti",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base}}/projects/{{projectId}}/ai-analiz/rejim",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "projects",
+                "{{projectId}}",
+                "ai-analiz",
+                "rejim"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Rejim dəyiş (Menecer+icazə)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base}}/projects/{{projectId}}/ai-analiz/rejim",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "projects",
+                "{{projectId}}",
+                "ai-analiz",
+                "rejim"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"aktiv\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Keşlənmiş analiz",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base}}/projects/{{projectId}}/ai-analiz",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "projects",
+                "{{projectId}}",
+                "ai-analiz"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Analiz et (Menecer)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base}}/projects/{{projectId}}/ai-analiz",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "projects",
+                "{{projectId}}",
+                "ai-analiz"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Məcburi yenilə (Menecer)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base}}/projects/{{projectId}}/ai-analiz/yenile",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "projects",
+                "{{projectId}}",
+                "ai-analiz",
+                "yenile"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Export (Menecer)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base}}/projects/{{projectId}}/ai-analiz/export",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "projects",
+                "{{projectId}}",
+                "ai-analiz",
+                "export"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Promt (Menecer)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base}}/projects/{{projectId}}/ai-analiz/promt",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "projects",
+                "{{projectId}}",
+                "ai-analiz",
+                "promt"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "11 · Admin",
+      "item": [
+        {
+          "name": "Bildiriş göndər",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base}}/admin/notifications",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "admin",
+                "notifications"
+              ]
+            },
+            "description": "kateqoriyalar: 1=üzv, 2=manager, 3=admin. Ən azı bir hədəf.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"kateqoriyalar\": [\n    1,\n    2\n  ],\n  \"userIds\": [\n    5,\n    6\n  ],\n  \"title\": \"Başlıq\",\n  \"message\": \"Mətn\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "İstifadəçi yarat",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base}}/admin/users",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "admin",
+                "users"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ad\": \"Ad\",\n  \"soyad\": \"Soyad\",\n  \"ataAdi\": \"Ata\",\n  \"username\": \"yeniuser\",\n  \"parol\": \"parol123\",\n  \"status\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "İstifadəçi siyahı",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base}}/admin/users?q=&limit=50",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "admin",
+                "users"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": ""
+                },
+                {
+                  "key": "limit",
+                  "value": "50"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "İstifadəçi redaktə",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base}}/admin/users/{{userId}}",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                "{{userId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ad\": \"Ad\",\n  \"soyad\": \"Soyad\",\n  \"username\": \"user\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Status dəyiş",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base}}/admin/users/{{userId}}/status",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                "{{userId}}",
+                "status"
+              ]
+            },
+            "description": "0=blok,1=user,2=manager,3=admin. Öz statusunu dəyişmək olmaz.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": 2\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Favorit toggle",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base}}/admin/users/{{userId}}/favorite",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                "{{userId}}",
+                "favorite"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"secilmis\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Loglar",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base}}/admin/logs?limit=1500",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "admin",
+                "logs"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "1500"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Logları sil",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base}}/admin/logs",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "admin",
+                "logs"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "AI icazələri",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base}}/admin/ai-icazeler",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "admin",
+                "ai-icazeler"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "AI icazə ver/ləğv",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base}}/admin/ai-icazeler/{{userId}}",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "admin",
+                "ai-icazeler",
+                "{{userId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"verilsin\": true,\n  \"qeyd\": \"Qeyd\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Layihələr (deadline idarəsi)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base}}/admin/proyektler?q=",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "admin",
+                "proyektler"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Deadline dəyiş",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base}}/admin/proyektler/{{projectId}}/deadline",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "admin",
+                "proyektler",
+                "{{projectId}}",
+                "deadline"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"start_at\": \"2026-09-01T09:00:00.000Z\",\n  \"end_at\": \"2026-12-01T18:00:00.000Z\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ],
+      "description": "Bütün endpoint-lər yalnız qlobal Admin (status=3)."
+    },
+    {
+      "name": "12 · Sağlamlıq",
+      "item": [
+        {
+          "name": "Health (liveness)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{host}}/health",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "health"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ready (DB)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{host}}/ready",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "ready"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "description": "/api/v1 prefiksi YOXDUR — birbaşa host altında."
+    },
+    {
+      "name": "🆕 YENİ API-lər (inteqrasiya)",
+      "item": [
+        {
+          "name": "Chat oxunmamış (bildiriş)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base}}/chat/oxunmamis",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "chat",
+                "oxunmamis"
+              ]
+            },
+            "description": "Bütün üzv olduğun proyektlər üzrə oxunmamış chat mesajı sayı + cəmi. Cavab: { cemi: number, proyektler: [{ projectId, ad, say }] }. Xarici sistem bunu poll edib chat bildirişi göstərə bilər."
+          },
+          "response": []
+        },
+        {
+          "name": "Görüşlər / Zəng (LiveKit)",
+          "item": [
+            {
+              "name": "Konfiq (aktivdirmi)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base}}/meetings/konfiq",
+                  "host": [
+                    "{{base}}"
+                  ],
+                  "path": [
+                    "meetings",
+                    "konfiq"
+                  ]
+                },
+                "description": "{aktiv, record}"
+              },
+              "response": []
+            },
+            {
+              "name": "Siyahı",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base}}/meetings",
+                  "host": [
+                    "{{base}}"
+                  ],
+                  "path": [
+                    "meetings"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Yarat (Manager)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base}}/meetings",
+                  "host": [
+                    "{{base}}"
+                  ],
+                  "path": [
+                    "meetings"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"ad\": \"Həftəlik görüş\",\n  \"tesvir\": \"Gündəm...\",\n  \"projectId\": 1,\n  \"baslama\": \"2026-09-10T10:00:00.000Z\",\n  \"istirakcilar\": [\n    5,\n    6\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Zəng tokeni (ad-hoc)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base}}/meetings/zeng-token",
+                  "host": [
+                    "{{base}}"
+                  ],
+                  "path": [
+                    "meetings",
+                    "zeng-token"
+                  ]
+                },
+                "description": "novu 'proyekt' (projectId) və ya 'dm' (hedefId). Cavab: {wsUrl, token, otaq, meetingId}.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"novu\": \"proyekt\",\n  \"projectId\": 1,\n  \"video\": true\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Detal",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base}}/meetings/{{meetingId}}",
+                  "host": [
+                    "{{base}}"
+                  ],
+                  "path": [
+                    "meetings",
+                    "{{meetingId}}"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Qoşulma tokeni",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base}}/meetings/{{meetingId}}/token",
+                  "host": [
+                    "{{base}}"
+                  ],
+                  "path": [
+                    "meetings",
+                    "{{meetingId}}",
+                    "token"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Ləğv et (yaradan)",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{base}}/meetings/{{meetingId}}",
+                  "host": [
+                    "{{base}}"
+                  ],
+                  "path": [
+                    "meetings",
+                    "{{meetingId}}"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Record başlat",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base}}/meetings/{{meetingId}}/record",
+                  "host": [
+                    "{{base}}"
+                  ],
+                  "path": [
+                    "meetings",
+                    "{{meetingId}}",
+                    "record"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Record dayandır",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base}}/meetings/{{meetingId}}/record/{{recordId}}/stop",
+                  "host": [
+                    "{{base}}"
+                  ],
+                  "path": [
+                    "meetings",
+                    "{{meetingId}}",
+                    "record",
+                    "{{recordId}}",
+                    "stop"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Record endir",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base}}/meetings/record/{{recordId}}/download",
+                  "host": [
+                    "{{base}}"
+                  ],
+                  "path": [
+                    "meetings",
+                    "record",
+                    "{{recordId}}",
+                    "download"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        }
+      ],
+      "description": "Bu qutudakılar orijinal sənəddən SONRA əlavə olunan API-lərdir.\n\n• Chat oxunmamış (bildiriş) — cross-project oxunmamış say.\n• Görüşlər / Zəng (LiveKit) — audio/video zəng, meeting, record.\n\nAUTH DƏYİŞİKLİYİ: Login artıq body-də `accessToken` qaytarır və backend `Authorization: Bearer <accessToken>` başlığını qəbul edir (httpOnly cookie ilə yanaşı). Kolleksiya-səviyyəli Bearer avtomatik qoşulub — Login-dən sonra hər sorğu işləyir."
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "host",
+      "value": "https://pms.azerenerji.az"
+    },
+    {
+      "key": "base",
+      "value": "{{host}}/api/v1"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "captchaToken",
+      "value": ""
+    },
+    {
+      "key": "captcha",
+      "value": ""
+    },
+    {
+      "key": "projectId",
+      "value": "1"
+    },
+    {
+      "key": "taskId",
+      "value": "1"
+    },
+    {
+      "key": "userId",
+      "value": "5"
+    },
+    {
+      "key": "mesajId",
+      "value": "1"
+    },
+    {
+      "key": "meetingId",
+      "value": "1"
+    },
+    {
+      "key": "recordId",
+      "value": "1"
+    },
+    {
+      "key": "notifId",
+      "value": "1"
+    },
+    {
+      "key": "teklifId",
+      "value": "1"
+    }
+  ]
+}

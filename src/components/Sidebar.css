@@ -1,0 +1,308 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* ── Root ───────────────────────────────────────────────────────────────── */
+.sb-root {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 240px;
+  height: 100vh;
+  background: #0b0c13;
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  flex-direction: column;
+  padding: 20px 0 0;
+  box-sizing: border-box;
+  z-index: 100;
+  font-family: 'Inter', system-ui, sans-serif;
+  overflow: visible;
+}
+
+/* ── Top glow ───────────────────────────────────────────────────────────── */
+.sb-glow {
+  position: absolute;
+  top: -60px;
+  left: -40px;
+  width: 260px;
+  height: 260px;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.18) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Logo Row ───────────────────────────────────────────────────────────── */
+.sb-logo-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px 18px 18px;
+  position: relative;
+  z-index: 1;
+}
+
+.sb-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sb-logo-actions {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.sb-logo-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  flex-shrink: 0;
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
+}
+
+.sb-logo-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.sb-logo-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: #f1f5f9;
+  letter-spacing: 0.5px;
+  line-height: 1.2;
+}
+
+.sb-logo-sub {
+  font-size: 10.5px;
+  color: #3d4560;
+  font-weight: 400;
+  line-height: 1;
+}
+
+/* ── Divider ────────────────────────────────────────────────────────────── */
+.sb-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.05);
+  margin: 0 18px;
+}
+
+.sb-divider--mb {
+  margin-bottom: 14px;
+}
+
+/* ── Nav ────────────────────────────────────────────────────────────────── */
+.sb-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 16px 10px 0;
+  position: relative;
+  z-index: 1;
+}
+
+.sb-nav-section-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #2d3548;
+  padding: 0 8px;
+  margin: 0 0 8px;
+}
+
+/* ── Nav item ───────────────────────────────────────────────────────────── */
+.sb-nav-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  text-align: left;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.sb-nav-item:hover:not(.sb-nav-item--disabled):not(.sb-nav-item--active) {
+  background: rgba(255, 255, 255, 0.04);
+  color: #94a3b8;
+}
+
+/* Aktiv element */
+.sb-nav-item--active {
+  background: rgba(99, 102, 241, 0.12);
+  color: #a5b4fc;
+  font-weight: 600;
+}
+
+/* Aktiv sol xətt */
+.sb-nav-item--active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 60%;
+  background: linear-gradient(180deg, #6366f1 0%, #8b5cf6 100%);
+  border-radius: 0 3px 3px 0;
+}
+
+/* Deaktiv element */
+.sb-nav-item--disabled {
+  color: #2d3548;
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+.sb-nav-icon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  transition: color 0.15s ease;
+}
+
+.sb-nav-item--active .sb-nav-icon { color: #818cf8; }
+.sb-nav-item--disabled .sb-nav-icon { color: #232638; }
+
+.sb-nav-label {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── "Tezliklə" badge ───────────────────────────────────────────────────── */
+.sb-soon-badge {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  padding: 2px 6px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #2d3548;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ── Spacer ─────────────────────────────────────────────────────────────── */
+.sb-spacer { flex: 1; }
+
+/* ── User section ───────────────────────────────────────────────────────── */
+.sb-user-section {
+  padding: 0 10px 16px;
+  position: relative;
+  z-index: 1;
+}
+
+.sb-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Avatar */
+.sb-user-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.35);
+  letter-spacing: 0;
+}
+
+.sb-user-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  overflow: hidden;
+}
+
+.sb-user-name {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #cbd5e1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.3;
+}
+
+.sb-user-login {
+  font-size: 10.5px;
+  color: #3d4560;
+  font-weight: 400;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Çıxış düyməsi */
+.sb-logout-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.04);
+  color: #475569;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.18s ease;
+}
+
+.sb-logout-btn:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.25);
+  color: #f87171;
+}
+
+.sb-logout-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Çıxış spinner */
+.sb-logout-spinner {
+  display: block;
+  width: 13px;
+  height: 13px;
+  border: 2px solid rgba(148, 163, 184, 0.2);
+  border-top-color: #94a3b8;
+  border-radius: 50%;
+  animation: sbSpin 0.7s linear infinite;
+}
+
+@keyframes sbSpin {
+  to { transform: rotate(360deg); }
+}

@@ -1,0 +1,440 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* ── Root Layout ────────────────────────────────────────────────────────── */
+.pp-root {
+  position: relative;
+  min-height: 100vh;
+  background: #0d0e14;
+  font-family: 'Inter', system-ui, sans-serif;
+  color: #e2e4ef;
+  display: flex;
+  flex-direction: column;
+  padding: 32px 40px;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+/* ── Header ─────────────────────────────────────────────────────────────── */
+.pp-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+  position: relative;
+  z-index: 2;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.pp-header-left {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.pp-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.pp-back-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateX(-2px);
+}
+
+.pp-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pp-title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.4px;
+  color: #f1f5f9;
+}
+
+.pp-count-badge {
+  background: rgba(99, 102, 241, 0.15);
+  color: #818cf8;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+  border: 1px solid rgba(99, 102, 241, 0.25);
+}
+
+.pp-refresh-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  color: #a5b4fc;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.pp-refresh-btn:hover:not(:disabled) {
+  background: rgba(99, 102, 241, 0.22);
+  color: #fff;
+  border-color: rgba(99, 102, 241, 0.45);
+}
+
+.pp-refresh-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ── Content Layout ─────────────────────────────────────────────────────── */
+.pp-content {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+}
+
+/* ── Grid ───────────────────────────────────────────────────────────────── */
+.pp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+/* ── Card ───────────────────────────────────────────────────────────────── */
+.pp-card {
+  background: #11121a;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 16px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.pp-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(99, 102, 241, 0.35);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5), 0 0 20px rgba(99, 102, 241, 0.08);
+}
+
+.pp-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.pp-card-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pp-card-name {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+  color: #f8fafc;
+  line-height: 1.3;
+}
+
+.pp-role-badge {
+  align-self: flex-start;
+  background: rgba(168, 85, 247, 0.15);
+  color: #c084fc;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(168, 85, 247, 0.25);
+}
+
+.pp-status-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+  letter-spacing: 0.3px;
+}
+
+.pp-status--open {
+  background: rgba(34, 197, 94, 0.12);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.25);
+}
+
+.pp-status--closed {
+  background: rgba(148, 163, 184, 0.12);
+  color: #94a3b8;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.pp-card-desc {
+  margin: 0 0 20px 0;
+  font-size: 13.5px;
+  color: #94a3b8;
+  line-height: 1.55;
+  flex: 1;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.pp-card-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.pp-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: #64748b;
+}
+
+.pp-meta-item svg {
+  color: #818cf8;
+}
+
+.pp-meta-deadline {
+  /* eni tam tutub deadline chip-ini sola sürüşdürməsin */
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+/* ── Deadline Chip ─────────────────────────────────────────────────────── */
+.pp-deadline-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 100%;
+}
+
+.pp-deadline-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 20px;
+  white-space: nowrap;
+  letter-spacing: 0.2px;
+}
+
+/* normal → yaşıl */
+.pp-deadline-chip.dl-normal {
+  background: rgba(34, 197, 94, 0.12);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.25);
+}
+
+/* sari → sarı */
+.pp-deadline-chip.dl-sari {
+  background: rgba(234, 179, 8, 0.13);
+  color: #facc15;
+  border: 1px solid rgba(234, 179, 8, 0.28);
+}
+
+/* qirmizi → qırmızı */
+.pp-deadline-chip.dl-qirmizi {
+  background: rgba(239, 68, 68, 0.13);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+/* kecib → boz */
+.pp-deadline-chip.dl-kecib {
+  background: rgba(148, 163, 184, 0.1);
+  color: #94a3b8;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+/* teyin-olunmayib → solğun */
+.pp-deadline-chip.dl-yox {
+  background: rgba(255, 255, 255, 0.04);
+  color: #475569;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-style: italic;
+}
+
+/* ── Progress bar ──────────────────────────────────────────────────────── */
+.pp-deadline-bar-wrap {
+  width: 100%;
+  max-width: 160px;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.pp-deadline-bar-fill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.4s ease;
+}
+
+.pp-deadline-bar-fill.dl-normal  { background: #4ade80; }
+.pp-deadline-bar-fill.dl-sari    { background: #facc15; }
+.pp-deadline-bar-fill.dl-qirmizi { background: #f87171; }
+.pp-deadline-bar-fill.dl-kecib   { background: #475569; }
+
+/* ── Deadline date ─────────────────────────────────────────────────────── */
+.pp-deadline-date {
+  font-size: 11px;
+  color: #475569;
+}
+
+/* ── States (Loading / Error / Empty) ───────────────────────────────────── */
+.pp-state-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 360px;
+  text-align: center;
+  padding: 40px;
+}
+
+.pp-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid rgba(99, 102, 241, 0.2);
+  border-top-color: #6366f1;
+  border-radius: 50%;
+  animation: ppSpin 0.75s linear infinite;
+  margin-bottom: 16px;
+}
+
+.pp-spin {
+  animation: ppSpin 0.75s linear infinite;
+}
+
+@keyframes ppSpin {
+  to { transform: rotate(360deg); }
+}
+
+.pp-state-text {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0;
+}
+
+.pp-error-box {
+  background: rgba(239, 68, 68, 0.06);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 16px;
+  max-width: 420px;
+  margin: 40px auto;
+}
+
+.pp-error-title {
+  margin: 12px 0 6px;
+  font-size: 16px;
+  color: #f87171;
+}
+
+.pp-error-msg {
+  font-size: 13.5px;
+  color: #94a3b8;
+  margin: 0 0 20px;
+}
+
+.pp-retry-btn {
+  background: #ef4444;
+  color: #fff;
+  border: none;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 9px 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: opacity 0.18s ease;
+}
+
+.pp-retry-btn:hover {
+  opacity: 0.9;
+}
+
+.pp-empty-box {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  max-width: 460px;
+  margin: 40px auto;
+}
+
+.pp-empty-icon {
+  font-size: 44px;
+  margin-bottom: 12px;
+}
+
+.pp-empty-box h3 {
+  margin: 0 0 8px;
+  font-size: 17px;
+  color: #e2e4ef;
+}
+
+.pp-empty-box p {
+  margin: 0;
+  font-size: 13.5px;
+  color: #64748b;
+}
+
+/* ── Background Blobs ───────────────────────────────────────────────────── */
+.pp-blob {
+  position: fixed;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(100px);
+  z-index: 1;
+}
+
+.pp-blob--1 {
+  width: 480px;
+  height: 480px;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.14) 0%, transparent 70%);
+  top: -120px;
+  left: -80px;
+}
+
+.pp-blob--2 {
+  width: 550px;
+  height: 550px;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.10) 0%, transparent 70%);
+  bottom: -150px;
+  right: -100px;
+}
