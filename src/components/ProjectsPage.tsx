@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getProjects, type Project, type DeadlineInfo } from '../api/client';
+import CreateProjectModal from './CreateProjectModal';
 import './ProjectsPage.css';
 
 interface Props {
@@ -132,9 +133,10 @@ function DeadlineChip({ dl }: { dl: DeadlineInfo }) {
 // ─── Əsas komponent ────────────────────────────────────────────────────────────
 
 export default function ProjectsPage({ onBack, onSelectProject }: Props) {
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string>('');
+  const [projects, setProjects]               = useState<Project[]>([]);
+  const [loading, setLoading]                 = useState<boolean>(true);
+  const [error, setError]                     = useState<string>('');
+  const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
 
   const fetchProjects = useCallback(async () => {
     setLoading(true);
@@ -154,6 +156,11 @@ export default function ProjectsPage({ onBack, onSelectProject }: Props) {
   useEffect(() => {
     fetchProjects();
   }, [fetchProjects]);
+
+  const handleProjectCreated = (newProject: Project) => {
+    console.log('[Projects] Yeni layihə yaradıldı:', newProject);
+    fetchProjects();
+  };
 
   return (
     <div className="pp-root">
@@ -181,6 +188,18 @@ export default function ProjectsPage({ onBack, onSelectProject }: Props) {
 
         <div className="pp-header-right">
           <button
+            className="pp-create-btn"
+            onClick={() => setShowCreateModal(true)}
+            title="Yeni Layihə yarat"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            + Yeni Layihə
+          </button>
+
+          <button
             className="pp-refresh-btn"
             onClick={fetchProjects}
             disabled={loading}
@@ -205,6 +224,14 @@ export default function ProjectsPage({ onBack, onSelectProject }: Props) {
           </button>
         </div>
       </header>
+
+      {/* ── Yeni Layihə Modalı ── */}
+      {showCreateModal && (
+        <CreateProjectModal
+          onClose={() => setShowCreateModal(false)}
+          onProjectCreated={handleProjectCreated}
+        />
+      )}
 
       {/* Əsas məzmun */}
       <main className="pp-content">

@@ -203,28 +203,217 @@ export async function getProjects(): Promise<Project[]> {
   return [];
 }
 
+/**
+ * Layihənin bütün üzvlərini alır.
+ * GET /projects/:projectId/members
+ */
+export async function getProjectMembers(projectId: number): Promise<any[]> {
+  console.log(`[Projects] getProjectMembers(${projectId}) çağırıldı`);
+  try {
+    const res = await apiFetch<any>(`/projects/${projectId}/members`);
+    console.log('[Projects] getProjectMembers cavabı:', res);
+    if (Array.isArray(res)) return res;
+    if (Array.isArray(res?.members)) return res.members;
+    if (Array.isArray(res?.uzvler)) return res.uzvler;
+    if (Array.isArray(res?.users)) return res.users;
+    if (Array.isArray(res?.istifadeciler)) return res.istifadeciler;
+    if (Array.isArray(res?.data)) return res.data;
+    return [];
+  } catch (err) {
+    console.warn('[Projects] getProjectMembers xətası:', err);
+    return [];
+  }
+}
+
 /** Tək layihənin detallarını alır. */
 export async function getProjectDetail(projectId: number): Promise<Project> {
   console.log(`[Projects] getProjectDetail(${projectId}) çağırıldı`);
-  const res = await apiFetch<any>(`/projects/${projectId}`);
+  const [res, memberList] = await Promise.all([
+    apiFetch<any>(`/projects/${projectId}`),
+    getProjectMembers(projectId),
+  ]);
+  console.log('[ProjectDetail] RAW backend cavabı:', JSON.stringify(res, null, 2));
   console.log('[Projects] getProjectDetail cavabı:', res);
-  // Backend { layihe: {...} } və ya birbaşa obyekt qaytara bilər
-  return (res?.layihe ?? res?.project ?? res) as Project;
+  // Backend { layihe: {...}, menimRolum: '...' } və ya birbaşa obyekt qaytara bilər
+  const base = (res?.layihe ?? res?.project ?? res) || {};
+  const menimRolum =
+    base.menimRolum ||
+    res?.menimRolum ||
+    res?.myRole ||
+    res?.rol ||
+    base.myRole ||
+    base.rol ||
+    base.role ||
+    res?.role;
+
+  const rawUzvler =
+    base.uzvler ||
+    res?.uzvler ||
+    base.members ||
+    res?.members ||
+    base.users ||
+    res?.users ||
+    base.istifadeciler ||
+    res?.istifadeciler ||
+    [];
+
+  // /members endpoint-indən gələn və layihə detallarındakı üzvləri birləşdir
+  const combinedMembers = [...(Array.isArray(memberList) ? memberList : []), ...(Array.isArray(rawUzvler) ? rawUzvler : [])];
+
+  return {
+    ...base,
+    menimRolum,
+    uzvler: combinedMembers,
+  } as Project;
+}
+
+export interface SearchedUser {
+  id: number;
+  userId?: number;
+  username?: string;
+  name?: string;
+  ad?: string;
+  soyad?: string;
+  email?: string;
+  [key: string]: unknown;
+}
+
+/**
+ * Layihəyə əlavə etmək üçün istifadəçiləri axtarır.
+ * GET /projects/:projectId/members/axtar?q=...
+ */
+export async function searchUsers(projectId: number, q?: string): Promise<SearchedUser[]> {
+  const query = q && q.trim() ? `?q=${encodeURIComponent(q.trim())}` : '';
+  console.log(`[Projects] searchUsers(${projectId}, q='${q ?? ''}') çağırıldı`);
+  const res = await apiFetch<any>(`/projects/${projectId}/members/axtar${query}`);
+  console.log('[Projects] searchUsers cavabı:', res);
+  if (Array.isArray(res)) return res;
+  if (Array.isArray(res?.users)) return res.users;
+  if (Array.isArray(res?.istifadeciler)) return res.istifadeciler;
+  if (Array.isArray(res?.members)) return res.members;
+  if (Array.isArray(res?.data)) return res.data;
+  return [];
+}
+
+/**
+ * Layihəyə yeni üzv əlavə edir.
+ * POST /projects/:projectId/members, body { userId, role }
+ * role: 2=Menecer, 3=İstifadəçi, 4=Ghost
+ */
+/**
+ * Layihəyə yeni üzv əlavə edir.
+ * POST /projects/:projectId/members, body { userId, role }
+ * role: 2=Menecer, 3=İstifadəçi, 4=Ghost
+ */
+export async function addMember(
+  projectId: number,
+  userId: number,
+  role: 2 | 3 | 4
+): Promise<any> {
+  console.log(`[Projects] addMember(projectId=${projectId}, userId=${userId}, role=${role}) çağırıldı`);
+  const res = await apiFetch<any>(`/projects/${projectId}/members`, {
+    method: 'POST',
+    body: JSON.stringify({ userId: Number(userId), role: Number(role) }),
+  });
+  console.log('[Projects] addMember cavabı:', res);
+  return res;
+}
+
+/**
+ * Layihə üzvünün rolunu dəyişir (PATCH /projects/:projectId/members/:userId)
+ * role: 2=Menecer, 3=İstifadəçi, 4=Ghost
+ */
+export async function updateMemberRole(
+  projectId: number,
+  userId: number,
+  role: 2 | 3 | 4
+): Promise<any> {
+  console.log(`[Projects] updateMemberRole(projectId=${projectId}, userId=${userId}, role=${role}) çağırıldı`);
+  const res = await apiFetch<any>(`/projects/${projectId}/members/${userId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ role: Number(role) }),
+  });
+  console.log('[Projects] updateMemberRole cavabı:', res);
+  return res;
+}
+
+/**
+ * Layihədən üzvü silir (DELETE /projects/:projectId/members/:userId)
+ */
+export async function removeMember(
+  projectId: number,
+  userId: number
+): Promise<any> {
+  console.log(`[Projects] removeMember(projectId=${projectId}, userId=${userId}) çağırıldı`);
+  const res = await apiFetch<any>(`/projects/${projectId}/members/${userId}`, {
+    method: 'DELETE',
+  });
+  console.log('[Projects] removeMember cavabı:', res);
+  return res;
+}
+
+export interface CreateProjectPayload {
+  name: string;
+  description?: string;
+  start_at?: string | null;
+  end_at?: string | null;
+}
+
+/** Yeni layihə yaradır (POST /projects) */
+export async function createProject(data: CreateProjectPayload): Promise<Project> {
+  console.log('[Projects] createProject() çağırıldı, payload:', data);
+  const body: Record<string, any> = {
+    name: data.name,
+  };
+  if (data.description !== undefined && data.description !== null && data.description !== '') {
+    body.description = data.description;
+  }
+  if (data.start_at !== undefined && data.start_at !== null && data.start_at !== '') {
+    body.start_at = data.start_at;
+  }
+  if (data.end_at !== undefined && data.end_at !== null && data.end_at !== '') {
+    body.end_at = data.end_at;
+  }
+
+  const res = await apiFetch<any>('/projects', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+  console.log('[Projects] createProject() cavabı:', res);
+  return (res?.layihe ?? res?.project ?? res?.data ?? res) as Project;
+}
+
+/**
+ * Layihəni bağlayır (POST /projects/:projectId/bagla)
+ * Yalnız Menecer üçün; bütün tapşırıqlar bitmiş olmalıdır.
+ */
+export async function closeProject(projectId: number): Promise<any> {
+  console.log(`[Projects] closeProject(${projectId}) çağırıldı`);
+  try {
+    const res = await apiFetch<any>(`/projects/${projectId}/bagla`, {
+      method: 'POST',
+    });
+    console.log('[Projects] closeProject cavabı:', res);
+    return res;
+  } catch (err: unknown) {
+    console.log('[CloseProject] Backend-in TAM xəta cavabı:', JSON.stringify(err instanceof Error ? { message: err.message, stack: err.stack, ...(err as any) } : err, null, 2));
+    throw err;
+  }
 }
 
 // ─── Tapşırıqlar (Tasks) ──────────────────────────────────────────────────────
 
 /** Task statusu: 1=Açıq, 2=İcrada, 3=Bitib */
 export enum TaskStatus {
-  Aciq   = 1,
+  Aciq = 1,
   Icrada = 2,
-  Bitib  = 3,
+  Bitib = 3,
 }
 
 export const TASK_STATUS_LABEL: Record<TaskStatus, string> = {
-  [TaskStatus.Aciq]:   'Açıq',
+  [TaskStatus.Aciq]: 'Açıq',
   [TaskStatus.Icrada]: 'İcrada',
-  [TaskStatus.Bitib]:  'Bitib',
+  [TaskStatus.Bitib]: 'Bitib',
 };
 
 export interface Task {
@@ -256,10 +445,55 @@ export async function getTasks(projectId: number): Promise<Task[]> {
   console.log('[Tasks] Backend-dən gələn cavab:', res);
 
   if (Array.isArray(res)) return res;
-  if (Array.isArray(res?.tasks))        return res.tasks;
+  if (Array.isArray(res?.tasks)) return res.tasks;
   if (Array.isArray(res?.tapshiriqlar)) return res.tapshiriqlar;
-  if (Array.isArray(res?.data))         return res.data;
+  if (Array.isArray(res?.data)) return res.data;
   return [];
+}
+
+export interface CreateTaskPayload {
+  title: string;
+  description?: string;
+  assigneeId?: number | null;
+  start_at?: string | null;
+  deadline?: string | null;
+  ceki?: number | null;
+}
+
+/** Yeni tapşırıq yaradır (POST /projects/:projectId/tasks) */
+export async function createTask(projectId: number, data: CreateTaskPayload): Promise<Task> {
+  console.log(`[Tasks] createTask(projectId=${projectId}) çağırıldı, daxil olan data:`, data);
+
+  // Backend DTO (class-validator whitelist) üçün təmizlənmiş body:
+  // Sahələr: title, description, assigneeId (mütləq camelCase), start_at, deadline, ceki
+  const body: Record<string, any> = {
+    title: data.title,
+  };
+
+  if (data.description !== undefined && data.description !== null && data.description !== '') {
+    body.description = data.description;
+  }
+  if (data.assigneeId !== undefined && data.assigneeId !== null) {
+    body.assigneeId = Number(data.assigneeId);
+  }
+  if (data.start_at !== undefined && data.start_at !== null && data.start_at !== '') {
+    body.start_at = data.start_at;
+  }
+  if (data.deadline !== undefined && data.deadline !== null && data.deadline !== '') {
+    body.deadline = data.deadline;
+  }
+  if (data.ceki !== undefined && data.ceki !== null) {
+    body.ceki = Number(data.ceki);
+  }
+
+  console.log('[Tasks] createTask() backend-ə göndərilən yekun JSON body:', body);
+
+  const res = await apiFetch<any>(`/projects/${projectId}/tasks`, {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+  console.log('[Tasks] createTask() cavabı:', res);
+  return (res?.task ?? res?.tapshiriq ?? res?.data ?? res) as Task;
 }
 
 /** Task statusunu dəyişir.
@@ -280,6 +514,58 @@ export async function updateTaskStatus(
     body: JSON.stringify({ status }),
   });
   console.log('[Tasks] Status uğurla dəyişdirildi');
+}
+
+export interface UpdateTaskPayload {
+  title?: string;
+  description?: string | null;
+  assigneeId?: number | null;
+  start_at?: string | null;
+  deadline?: string | null;
+  ceki?: number | null;
+}
+
+/**
+ * Task məlumatlarını yeniləyir (PATCH /projects/:projectId/tasks/:taskId)
+ * Yalnız Menecer hüququ ilə çağırılır.
+ */
+export async function updateTask(
+  projectId: number,
+  taskId: number,
+  data: UpdateTaskPayload
+): Promise<Task> {
+  console.log(`[Tasks] updateTask(projectId=${projectId}, taskId=${taskId}) çağırıldı:`, data);
+
+  const body: Record<string, any> = {};
+  if (data.title !== undefined) body.title = data.title;
+  if (data.description !== undefined) body.description = data.description;
+  if (data.assigneeId !== undefined) {
+    body.assigneeId = data.assigneeId !== null ? Number(data.assigneeId) : null;
+  }
+  if (data.start_at !== undefined) body.start_at = data.start_at;
+  if (data.deadline !== undefined) body.deadline = data.deadline;
+  if (data.ceki !== undefined) {
+    body.ceki = data.ceki !== null ? Number(data.ceki) : null;
+  }
+
+  const res = await apiFetch<any>(`/projects/${projectId}/tasks/${taskId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(body),
+  });
+  console.log('[Tasks] updateTask cavabı:', res);
+  return (res?.task ?? res?.tapshiriq ?? res?.data ?? res) as Task;
+}
+
+/**
+ * Taskı silir (DELETE /projects/:projectId/tasks/:taskId)
+ * Yalnız Menecer hüququ ilə çağırılır.
+ */
+export async function deleteTask(projectId: number, taskId: number): Promise<void> {
+  console.log(`[Tasks] deleteTask(projectId=${projectId}, taskId=${taskId}) çağırıldı`);
+  await apiFetch<unknown>(`/projects/${projectId}/tasks/${taskId}`, {
+    method: 'DELETE',
+  });
+  console.log('[Tasks] Task uğurla silindi');
 }
 
 // ─── Chat ─────────────────────────────────────────────────────────────────────
@@ -575,10 +861,10 @@ export async function getNotifications(): Promise<NotificationsResult> {
   const say = typeof res?.say === 'number'
     ? res.say
     : typeof res?.count === 'number'
-    ? res.count
-    : typeof res?.unreadCount === 'number'
-    ? res.unreadCount
-    : siyahi.filter(b => !b.oxundu && !b.read && !b.isRead).length;
+      ? res.count
+      : typeof res?.unreadCount === 'number'
+        ? res.unreadCount
+        : siyahi.filter(b => !b.oxundu && !b.read && !b.isRead).length;
 
   return { say, siyahi };
 }

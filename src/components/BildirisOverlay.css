@@ -1,0 +1,414 @@
+/* ==========================================================================
+   BildirisOverlay Styles
+   Adi (Toast), Vacib (Modal), Çox Vacib (Tam Ekran Overlay)
+   ========================================================================== */
+
+/* ── 1. ÜMUMİ VƏ RESET ── */
+.bo-container {
+  pointer-events: auto;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ── 2. ADİ BİLDİRİŞ (TOAST) ── */
+.bo-toast-stack {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 999990;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 12px;
+  pointer-events: none;
+  max-width: 380px;
+  width: calc(100vw - 48px);
+}
+
+.bo-toast {
+  pointer-events: auto;
+  background: linear-gradient(135deg, #312e81 0%, #4338ca 40%, #581c87 100%);
+  border: 1px solid rgba(165, 180, 252, 0.3);
+  border-radius: 14px;
+  box-shadow: 0 12px 32px -4px rgba(49, 46, 129, 0.6), 0 4px 12px rgba(0, 0, 0, 0.4);
+  color: #ffffff;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  backdrop-filter: blur(12px);
+  animation: boToastSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.bo-toast::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #818cf8, #c084fc, #f472b6);
+}
+
+.bo-toast-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.bo-toast-badge-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bo-toast-icon-wrap {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #e0e7ff;
+}
+
+.bo-toast-brand {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  color: #c7d2fe;
+  text-transform: uppercase;
+}
+
+.bo-toast-close {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.bo-toast-close:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.bo-toast-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bo-toast-msg {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: #f8fafc;
+  word-break: break-word;
+  font-weight: 500;
+}
+
+.bo-toast-meta {
+  font-size: 11.5px;
+  color: #cbd5e1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.bo-toast-sender {
+  color: #e2e8f0;
+  font-weight: 600;
+}
+
+@keyframes boToastSlideIn {
+  from {
+    transform: translateX(120%) scale(0.92);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0) scale(1);
+    opacity: 1;
+  }
+}
+
+/* ── 2. VACİB BİLDİRİŞ (MODAL) ── */
+.bo-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 7, 18, 0.78);
+  backdrop-filter: blur(8px);
+  z-index: 1000000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: boFadeIn 0.25s ease-out forwards;
+}
+
+.bo-modal-card {
+  background: #131625;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  border-radius: 20px;
+  box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.85), 0 0 30px rgba(245, 158, 11, 0.15);
+  max-width: 480px;
+  width: 100%;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  animation: boModalScaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  position: relative;
+  overflow: hidden;
+}
+
+.bo-modal-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #f59e0b, #fbbf24, #d97706);
+}
+
+.bo-modal-icon-badge {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(245, 158, 11, 0.15);
+  border: 2px solid rgba(245, 158, 11, 0.3);
+  color: #f59e0b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 18px;
+  box-shadow: 0 0 24px rgba(245, 158, 11, 0.2);
+}
+
+.bo-modal-title {
+  margin: 0 0 10px 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.bo-modal-msg {
+  margin: 0 0 18px 0;
+  font-size: 15px;
+  line-height: 1.55;
+  color: #e2e8f0;
+  word-break: break-word;
+}
+
+.bo-modal-sender-box {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 13px;
+  color: #94a3b8;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.bo-modal-sender-val {
+  color: #f1f5f9;
+  font-weight: 600;
+}
+
+.bo-modal-btn {
+  background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
+  color: #0f172a;
+  border: none;
+  font-size: 14.5px;
+  font-weight: 700;
+  padding: 12px 32px;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.35);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+  min-width: 150px;
+}
+
+.bo-modal-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(245, 158, 11, 0.5);
+  filter: brightness(1.05);
+}
+
+.bo-modal-btn:active {
+  transform: translateY(0);
+}
+
+/* ── 3. ÇOX VACİB BİLDİRİŞ (TAM EKRAN OVERLAY) ── */
+.bo-fullscreen-backdrop {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(127, 29, 29, 0.94) 0%, rgba(69, 10, 10, 0.98) 100%);
+  backdrop-filter: blur(14px);
+  z-index: 1000010;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  animation: boFadeIn 0.2s ease-out forwards;
+}
+
+.bo-fullscreen-border-pulse {
+  position: fixed;
+  inset: 0;
+  border: 6px solid #ef4444;
+  pointer-events: none;
+  z-index: 1000011;
+  animation: boBorderPulse 1.4s infinite ease-in-out;
+}
+
+.bo-fullscreen-card {
+  background: rgba(26, 9, 9, 0.85);
+  border: 2px solid #ef4444;
+  border-radius: 24px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.9), 0 0 50px rgba(239, 68, 68, 0.4);
+  max-width: 600px;
+  width: 100%;
+  padding: 36px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  animation: boModalScaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.bo-fullscreen-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: rgba(239, 68, 68, 0.2);
+  border: 3px solid #ef4444;
+  color: #f87171;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  box-shadow: 0 0 32px rgba(239, 68, 68, 0.5);
+  animation: boIconAlert 1.2s infinite ease-in-out;
+}
+
+.bo-fullscreen-tag {
+  background: #ef4444;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 4px 14px;
+  border-radius: 20px;
+  margin-bottom: 12px;
+}
+
+.bo-fullscreen-title {
+  margin: 0 0 16px 0;
+  font-size: 24px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.3px;
+}
+
+.bo-fullscreen-msg {
+  margin: 0 0 24px 0;
+  font-size: 18px;
+  line-height: 1.6;
+  color: #fecaca;
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.bo-fullscreen-sender {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  padding: 10px 18px;
+  font-size: 14px;
+  color: #e2e8f0;
+  margin-bottom: 32px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bo-fullscreen-sender strong {
+  color: #ffffff;
+}
+
+.bo-fullscreen-btn {
+  background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+  color: #ffffff;
+  border: none;
+  font-size: 16px;
+  font-weight: 700;
+  padding: 14px 44px;
+  border-radius: 14px;
+  cursor: pointer;
+  box-shadow: 0 10px 30px rgba(239, 68, 68, 0.5);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  min-width: 200px;
+}
+
+.bo-fullscreen-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 40px rgba(239, 68, 68, 0.7);
+  background: linear-gradient(135deg, #b91c1c 0%, #dc2626 100%);
+}
+
+.bo-fullscreen-btn:active {
+  transform: translateY(0);
+}
+
+/* ── ANIMASIYALAR ── */
+@keyframes boFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes boModalScaleUp {
+  from {
+    transform: scale(0.92);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes boBorderPulse {
+  0% {
+    border-color: rgba(239, 68, 68, 0.4);
+    box-shadow: inset 0 0 30px rgba(239, 68, 68, 0.2);
+  }
+  50% {
+    border-color: rgba(239, 68, 68, 1);
+    box-shadow: inset 0 0 60px rgba(239, 68, 68, 0.6);
+  }
+  100% {
+    border-color: rgba(239, 68, 68, 0.4);
+    box-shadow: inset 0 0 30px rgba(239, 68, 68, 0.2);
+  }
+}
+
+@keyframes boIconAlert {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}

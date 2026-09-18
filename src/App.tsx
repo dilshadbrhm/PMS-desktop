@@ -1,14 +1,17 @@
 import { useState, useEffect } from 'react';
 import { getMe, getToken, type User } from './api/client';
 import { connectSocket, disconnectSocket } from './api/socket';
+import { connectNotifySocket, disconnectNotifySocket } from './api/notifySocket';
 import LoginPage from './components/LoginPage';
 import Dashboard from './components/Dashboard';
 import ProjectsPage from './components/ProjectsPage';
 import ProjectDetailPage from './components/ProjectDetailPage';
+import NotificationsPage from './components/NotificationsPage';
+import BildirisOverlay from './components/BildirisOverlay';
 import Sidebar from './components/Sidebar';
 import './App.css';
 
-type View = 'dashboard' | 'projects' | 'projectDetail';
+type View = 'dashboard' | 'projects' | 'projectDetail' | 'notifications';
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -30,7 +33,7 @@ export default function App() {
     });
   }, []);
 
-  // TODO (müvəqqəti test): currentUser dəyişəndə socket bağla/ayır
+  // currentUser dəyişəndə socket-ləri bağla/ayır
   useEffect(() => {
     if (!currentUser) return;
     const token = getToken();
@@ -39,8 +42,9 @@ export default function App() {
       return;
     }
     connectSocket(token);
+    connectNotifySocket(token);
     // Cleanup: bu effect yenidən işləməzdən əvvəl ayırma lazım deyil —
-    // disconnectSocket yalnız logout-da çağırılır ki, bağlantı davamlı olsun
+    // disconnectSocket və disconnectNotifySocket yalnız logout-da çağırılır
   }, [currentUser]);
 
   // ── Handlers ──────────────────────────────────────────────────────────────
@@ -53,7 +57,8 @@ export default function App() {
 
   const handleLogout = () => {
     console.log('[App] Logout');
-    disconnectSocket(); // TODO (müvəqqəti test): socket bağlantısını ayır
+    disconnectSocket();
+    disconnectNotifySocket();
     setCurrentUser(null);
     setSelectedProjectId(null);
     setView('dashboard');
@@ -105,6 +110,13 @@ export default function App() {
         />
       );
     }
+    if (view === 'notifications') {
+      return (
+        <NotificationsPage
+          onBack={() => handleNavigate('dashboard')}
+        />
+      );
+    }
     return (
       <Dashboard
         user={currentUser}
@@ -125,6 +137,7 @@ export default function App() {
       <main className="app-content">
         {renderContent()}
       </main>
+      <BildirisOverlay />
     </div>
   );
 }

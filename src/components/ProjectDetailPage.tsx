@@ -2,6 +2,9 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   getProjectDetail,
   getTasks,
+  updateMemberRole,
+  removeMember,
+  closeProject,
   type Project,
   type Task,
   type DeadlineInfo,
@@ -14,6 +17,8 @@ import {
 } from '../api/socket';
 import TaskDetailModal from './TaskDetailModal';
 import ChatPanel from './ChatPanel';
+import CreateTaskModal from './CreateTaskModal';
+import AddMemberModal from './AddMemberModal';
 import './ProjectDetailPage.css';
 
 interface Props {
@@ -122,7 +127,7 @@ function CekiBadge({ ceki }: { ceki?: number | null }) {
 function TaskCard({ task, onOpen }: { task: Task; onOpen: (t: Task) => void }) {
   const dl = parseDeadline(task.deadlineVeziyyeti ?? task.deadline);
   const assigneeName = task.assignee?.name ?? 'Təyin edilməyib';
-  const hasAssignee  = !!task.assignee?.name;
+  const hasAssignee = !!task.assignee?.name;
 
   return (
     <div
@@ -161,17 +166,27 @@ function TaskCard({ task, onOpen }: { task: Task; onOpen: (t: Task) => void }) {
 // ─── Status Sütunu ────────────────────────────────────────────────────────────
 
 const COLUMNS: { status: number; label: string; cls: string }[] = [
-  { status: TaskStatus.Aciq,   label: 'Açıq',    cls: 'col-aciq'   },
-  { status: TaskStatus.Icrada, label: 'İcrada',   cls: 'col-icrada' },
-  { status: TaskStatus.Bitib,  label: 'Bitib',    cls: 'col-bitib'  },
+  { status: TaskStatus.Aciq, label: 'Açıq', cls: 'col-aciq' },
+  { status: TaskStatus.Icrada, label: 'İcrada', cls: 'col-icrada' },
+  { status: TaskStatus.Bitib, label: 'Bitib', cls: 'col-bitib' },
 ];
 
 // ─── Layihə Başlıq Bloku ──────────────────────────────────────────────────────
 
-function ProjectHeader({ project }: { project: Project }) {
+function ProjectHeader({
+  project,
+  canClose,
+  onCloseClick,
+  isClosing,
+}: {
+  project: Project;
+  canClose: boolean;
+  onCloseClick: () => void;
+  isClosing: boolean;
+}) {
   const dl = parseDeadline(project.deadline);
   const isOpen = project.status !== 0 && project.status !== '0' &&
-                 project.status !== 'closed' && project.status !== 'BAGLI';
+    project.status !== 'closed' && project.status !== 'BAGLI';
 
   return (
     <div className="pdp-proj-header">
@@ -183,6 +198,21 @@ function ProjectHeader({ project }: { project: Project }) {
           </span>
           {project.menimRolum && (
             <span className="pdp-proj-role">{project.menimRolum}</span>
+          )}
+          {canClose && isOpen && (
+            <button
+              type="button"
+              className="pdp-close-proj-btn"
+              onClick={onCloseClick}
+              disabled={isClosing}
+              title="Layihəni bağla (bütün tapşırıqlar bitməlidir)"
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+              {isClosing ? 'Bağlanır...' : 'Layihəni bağla'}
+            </button>
           )}
         </div>
       </div>
@@ -234,16 +264,42 @@ function ProjectHeader({ project }: { project: Project }) {
   );
 }
 
+function checkIsManager(role?: string | number | null): boolean {
+  if (role === null || role === undefined || role === '') return false;
+  // Rəqəm və ya string yoxlaması: 2 = Menecer, 1 = Qlobal/Sistem Menecer/Admin
+  if (role === 2 || role === 1 || role === '2' || role === '1') return true;
+  const r = String(role).trim().toLowerCase();
+  return (
+    r === '2' ||
+    r === '1' ||
+    r.includes('men') ||     // Menecer, menecer
+    r.includes('man') ||     // Manager, manager
+    r.includes('admin') ||   // Admin
+    r.includes('rehber') ||  // Rehber
+    r.includes('rəhbər') ||  // Rəhbər
+    r.includes('owner') ||   // Owner
+    r.includes('sahib')
+  );
+}
+
 // ─── Əsas Komponent ───────────────────────────────────────────────────────────
 
 export default function ProjectDetailPage({ projectId, onBack, currentUserId }: Props) {
-  const [project, setProject]           = useState<Project | null>(null);
-  const [tasks, setTasks]               = useState<Task[]>([]);
-  const [loading, setLoading]           = useState(true);
-  const [error, setError]               = useState('');
+  const [project, setProject] = useState<Project | null>(null);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-  const [activeTab, setActiveTab]       = useState<'tasks' | 'chat' | 'members'>('tasks');
+  const [activeTab, setActiveTab] = useState<'tasks' | 'chat' | 'members'>('tasks');
   const [onlineUserIds, setOnlineUserIds] = useState<Set<number>>(new Set());
+  const [showCreateTaskModal, setShowCreateTaskModal] = useState(false);
+  const [showAddMemberModal, setShowAddMemberModal] = useState(false);
+  const [closingProject, setClosingProject] = useState(false);
+  const [showCloseProjectConfirm, setShowCloseProjectConfirm] = useState(false);
+  const [closeProjectError, setCloseProjectError] = useState('');
+  const [memberActionLoadingId, setMemberActionLoadingId] = useState<number | null>(null);
+  const [memberActionError, setMemberActionError] = useState('');
+  const [memberToDelete, setMemberToDelete] = useState<{ id: number; name: string } | null>(null);
 
   // Socket-dən onlayn istifadəçiləri qlobal səviyyədə də dinləyirik (Üzvlər tab-ı üçün)
   useEffect(() => {
@@ -306,6 +362,148 @@ export default function ProjectDetailPage({ projectId, onBack, currentUserId }: 
     }
   }, [projectId]);
 
+  // Yeni task yaradıldıqda siyahını yenilə
+  const handleTaskCreated = useCallback(async () => {
+    try {
+      const taskList = await getTasks(projectId);
+      setTasks(taskList);
+    } catch (err) {
+      console.error('[ProjectDetail] Task refresh xətası:', err);
+    }
+  }, [projectId]);
+
+  // Üzv əlavə edildikdə layihə məlumatlarını yenidən yüklə
+  const handleMemberAdded = useCallback(async () => {
+    console.log('[ProjectDetail] Üzv əlavə olundu, refetch edilir');
+    await load();
+  }, [load]);
+
+  // Üzvləri hesabla
+  const rawMembers: any[] =
+    (project as any)?.uzvler ||
+    (project as any)?.members ||
+    (project as any)?.users ||
+    (project as any)?.istifadeciler ||
+    [];
+
+  const membersMap = new Map<number, { name: string; role: number }>();
+  for (const m of rawMembers) {
+    const uId = Number(m.userId ?? m.id ?? m.istifadeciId ?? m.user?.id);
+    const uRole = Number(m.role ?? m.rol ?? m.roleId ?? m.rolId ?? 3);
+    const uName =
+      m.name ||
+      m.user?.name ||
+      (m.ad && m.soyad ? `${m.ad} ${m.soyad}` : '') ||
+      (m.user?.ad && m.user?.soyad ? `${m.user.ad} ${m.user.soyad}` : '') ||
+      m.ad ||
+      m.user?.ad ||
+      m.username ||
+      m.user?.username ||
+      '';
+    if (uId && uName) {
+      membersMap.set(uId, { name: uName, role: uRole });
+    }
+  }
+
+  for (const t of tasks) {
+    if (t.assignee?.id && t.assignee?.name) {
+      const aId = Number(t.assignee.id);
+      if (!membersMap.has(aId)) {
+        membersMap.set(aId, { name: t.assignee.name, role: 3 });
+      }
+    }
+  }
+
+  // Əgər cari istifadəçi üzv siyahısında yoxdursa, onu da əlavə edək (özünə təyin edə bilməsi üçün)
+  if (currentUserId && !membersMap.has(currentUserId)) {
+    membersMap.set(currentUserId, { name: 'Siz', role: 3 });
+  }
+
+  const normalizedMembers = Array.from(membersMap.entries()).map(([userId, info]) => ({
+    userId,
+    id: userId,
+    name: info.name,
+    role: info.role,
+  }));
+
+  const memberCount = normalizedMembers.length || Number(project?.uzvSayi ?? 0);
+
+  // Cari istifadəçinin layihə üzvləri siyahısındakı rolu və yaradıcı (created_by) olub-olmaması
+  const myMemberObj = rawMembers.find(
+    (m: any) => Number(m.userId ?? m.id ?? m.istifadeciId) === Number(currentUserId)
+  );
+  const myRoleInMembers = myMemberObj?.role ?? myMemberObj?.rol ?? myMemberObj?.roleId ?? myMemberObj?.rolId;
+  const isCreator = Boolean(project?.created_by && Number(project.created_by) === Number(currentUserId));
+
+  const userRole =
+    project?.menimRolum ||
+    (project as any)?.myRole ||
+    (project as any)?.rol ||
+    (project as any)?.role ||
+    myRoleInMembers ||
+    (isCreator ? 2 : undefined);
+
+  const isManager = checkIsManager(userRole) || isCreator;
+  console.log(
+    '[ProjectDetail] menimRolum:', JSON.stringify(project?.menimRolum),
+    'myRoleInMembers:', JSON.stringify(myRoleInMembers),
+    'isCreator:', isCreator,
+    'userRole:', JSON.stringify(userRole),
+    'isManager:', isManager
+  );
+  const existingMemberIds = new Set<number>(normalizedMembers.map(m => m.userId));
+
+  // Üzv rolu dəyişmə
+  const handleRoleChange = async (userId: number, newRole: 2 | 3 | 4) => {
+    setMemberActionError('');
+    setMemberActionLoadingId(userId);
+    try {
+      await updateMemberRole(projectId, userId, newRole);
+      await load();
+    } catch (err: unknown) {
+      console.error('[ProjectDetail] updateMemberRole xətası:', err);
+      setMemberActionError(err instanceof Error ? err.message : 'Rol dəyişdirilərkən xəta baş verdi');
+    } finally {
+      setMemberActionLoadingId(null);
+    }
+  };
+
+  // Üzv silmə təsdiqi
+  const confirmRemoveMember = async () => {
+    if (!memberToDelete) return;
+    setMemberActionError('');
+    setMemberActionLoadingId(memberToDelete.id);
+    try {
+      await removeMember(projectId, memberToDelete.id);
+      setMemberToDelete(null);
+      await load();
+    } catch (err: unknown) {
+      console.error('[ProjectDetail] removeMember xətası:', err);
+      setMemberActionError(err instanceof Error ? err.message : 'Üzv silinərkən xəta baş verdi');
+    } finally {
+      setMemberActionLoadingId(null);
+    }
+  };
+
+  // Layihə bağlama
+  const handleCloseProjectConfirm = async () => {
+    setCloseProjectError('');
+    setClosingProject(true);
+    try {
+      await closeProject(projectId);
+      setShowCloseProjectConfirm(false);
+      await load();
+    } catch (err: unknown) {
+      console.log('[CloseProject] Backend-in TAM xəta cavabı:', JSON.stringify(err instanceof Error ? { message: err.message, ...(err as any) } : err, null, 2));
+      console.error('[ProjectDetail] closeProject xətası:', err);
+
+      const realBackendMessage = err instanceof Error ? err.message : String(err || 'Layihə bağlanarkən xəta baş verdi');
+      setCloseProjectError(realBackendMessage);
+    } finally {
+      setClosingProject(false);
+    }
+  };
+
   return (
     <div className="pdp-root">
       {/* Dekorativ blob-lar */}
@@ -360,169 +558,354 @@ export default function ProjectDetailPage({ projectId, onBack, currentUserId }: 
         {!loading && !error && project && (
           <>
             {/* Layihə başlığı */}
-            <ProjectHeader project={project} />
+            <ProjectHeader
+              project={project}
+              canClose={isManager}
+              onCloseClick={() => {
+                setCloseProjectError('');
+                setShowCloseProjectConfirm(true);
+              }}
+              isClosing={closingProject}
+            />
 
-            {/* ── Tab küdəkləri ── */}
-            {(() => {
-              const rawMembers: any[] =
-                (project as any)?.uzvler ||
-                (project as any)?.members ||
-                (project as any)?.users ||
-                (project as any)?.istifadeciler ||
-                [];
+            {/* ── Tab Paneli və Əməliyyat Düymələri ── */}
+            <div className="pdp-tabs-bar">
+              <div className="pdp-tabs">
+                <button
+                  className={`pdp-tab ${activeTab === 'tasks' ? 'pdp-tab--active' : ''}`}
+                  onClick={() => setActiveTab('tasks')}
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+                  </svg>
+                  Tapşırıqlar
+                  <span className="pdp-tab-badge">{tasks.length}</span>
+                </button>
+                <button
+                  className={`pdp-tab ${activeTab === 'chat' ? 'pdp-tab--active' : ''}`}
+                  onClick={() => setActiveTab('chat')}
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                  </svg>
+                  Chat
+                </button>
+                <button
+                  className={`pdp-tab ${activeTab === 'members' ? 'pdp-tab--active' : ''}`}
+                  onClick={() => setActiveTab('members')}
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
+                  </svg>
+                  Üzvlər
+                  <span className="pdp-tab-badge">{memberCount}</span>
+                </button>
+              </div>
 
-              const membersMap = new Map<number, string>();
-              for (const m of rawMembers) {
-                const uId = Number(m.userId ?? m.id ?? m.istifadeciId);
-                const uName = m.name || (m.ad && m.soyad ? `${m.ad} ${m.soyad}` : (m.ad || ''));
-                if (uId && uName) {
-                  membersMap.set(uId, uName);
-                }
-              }
+              {activeTab === 'tasks' && (
+                <button
+                  className="pdp-create-task-btn"
+                  onClick={() => setShowCreateTaskModal(true)}
+                  title="Yeni tapşırıq əlavə et"
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                  </svg>
+                  + Yeni Task
+                </button>
+              )}
 
-              for (const t of tasks) {
-                if (t.assignee?.id && t.assignee?.name) {
-                  membersMap.set(Number(t.assignee.id), t.assignee.name);
-                }
-              }
+              {activeTab === 'members' && isManager && (
+                <button
+                  className="pdp-create-task-btn"
+                  onClick={() => setShowAddMemberModal(true)}
+                  title="Layihəyə yeni üzv əlavə et"
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                    <circle cx="8.5" cy="7" r="4" />
+                    <line x1="20" y1="8" x2="20" y2="14" />
+                    <line x1="23" y1="11" x2="17" y2="11" />
+                  </svg>
+                  + Üzv əlavə et
+                </button>
+              )}
+            </div>
 
-              const normalizedMembers = Array.from(membersMap.entries()).map(([userId, name]) => ({
-                userId,
-                id: userId,
-                name,
-              }));
+            {/* ── Tapşırıqlar tab-ı (Kanban) ── */}
+            {activeTab === 'tasks' && (
+              <div className="pdp-board">
+                {COLUMNS.map(col => {
+                  const colTasks = tasks.filter(t => Number(t.status) === col.status);
+                  return (
+                    <div key={col.status} className={`pdp-col ${col.cls}`}>
+                      <div className="pdp-col-header">
+                        <span className="pdp-col-label">{col.label}</span>
+                        <span className="pdp-col-count">{colTasks.length}</span>
+                      </div>
 
-              const memberCount = normalizedMembers.length || Number(project.uzvSayi ?? 0);
+                      <div className="pdp-col-body">
+                        {colTasks.length === 0 ? (
+                          <div className="pdp-col-empty">
+                            <span>Tapşırıq yoxdur</span>
+                          </div>
+                        ) : (
+                          colTasks.map(task => (
+                            <TaskCard
+                              key={task.id}
+                              task={task}
+                              onOpen={handleTaskOpen}
+                            />
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
 
-              return (
-                <>
-                  <div className="pdp-tabs">
-                    <button
-                      className={`pdp-tab ${activeTab === 'tasks' ? 'pdp-tab--active' : ''}`}
-                      onClick={() => setActiveTab('tasks')}
-                    >
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
-                      </svg>
-                      Tapşırıqlar
-                      <span className="pdp-tab-badge">{tasks.length}</span>
-                    </button>
-                    <button
-                      className={`pdp-tab ${activeTab === 'chat' ? 'pdp-tab--active' : ''}`}
-                      onClick={() => setActiveTab('chat')}
-                    >
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                      </svg>
-                      Chat
-                    </button>
-                    <button
-                      className={`pdp-tab ${activeTab === 'members' ? 'pdp-tab--active' : ''}`}
-                      onClick={() => setActiveTab('members')}
-                    >
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
-                      </svg>
-                      Üzvlər
-                      <span className="pdp-tab-badge">{memberCount}</span>
-                    </button>
+            {/* ── Chat tab-ı ── */}
+            {activeTab === 'chat' && (
+              <div className="pdp-chat-wrap">
+                <ChatPanel
+                  projectId={projectId}
+                  currentUserId={currentUserId}
+                  projectMembers={normalizedMembers}
+                />
+              </div>
+            )}
+
+            {/* ── Üzvlər tab-ı ── */}
+            {activeTab === 'members' && (
+              <div className="pdp-members-tab">
+                {memberActionError && (
+                  <div className="pdp-action-error-banner">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+                    </svg>
+                    <span>{memberActionError}</span>
+                    <button type="button" className="pdp-banner-close" onClick={() => setMemberActionError('')}>×</button>
                   </div>
+                )}
 
-                  {/* ── Tapşırıqlar tab-ı (Kanban) ── */}
-                  {activeTab === 'tasks' && (
-                    <div className="pdp-board">
-                      {COLUMNS.map(col => {
-                        const colTasks = tasks.filter(t => Number(t.status) === col.status);
-                        return (
-                          <div key={col.status} className={`pdp-col ${col.cls}`}>
-                            <div className="pdp-col-header">
-                              <span className="pdp-col-label">{col.label}</span>
-                              <span className="pdp-col-count">{colTasks.length}</span>
+                {normalizedMembers.length === 0 ? (
+                  <div className="pdp-col-empty">
+                    <span>Üzv siyahısı tapılmadı</span>
+                    {isManager && (
+                      <button
+                        type="button"
+                        className="pdp-create-task-btn"
+                        style={{ marginTop: 12 }}
+                        onClick={() => setShowAddMemberModal(true)}
+                      >
+                        + Üzv əlavə et
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <div className="pdp-members-grid">
+                    {normalizedMembers.map(m => {
+                      const isOnline = onlineUserIds.has(m.userId);
+                      const isSelf = m.userId === currentUserId;
+                      const canManageThisMember = isManager && !isSelf;
+                      const isLoadingThisMember = memberActionLoadingId === m.userId;
+
+                      return (
+                        <div key={m.userId} className={`pdp-member-card ${isOnline ? 'pdp-member-card--online' : ''}`}>
+                          <div className="pdp-member-avatar-wrap">
+                            <div className="pdp-member-avatar">
+                              {m.name.charAt(0).toUpperCase()}
                             </div>
+                            <span className={`pdp-member-presence-dot ${isOnline ? 'pdp-member-presence-dot--online' : ''}`} />
+                          </div>
+                          <div className="pdp-member-details">
+                            <div className="pdp-member-name-row">
+                              <span className="pdp-member-name" title={m.name}>{m.name}</span>
+                              {isSelf && (
+                                <span className="pdp-member-self-tag">Siz</span>
+                              )}
+                            </div>
+                            <span className="pdp-member-status-text">
+                              {isOnline ? '🟢 Onlayn' : '⚪ Oflayn'}
+                            </span>
 
-                            <div className="pdp-col-body">
-                              {colTasks.length === 0 ? (
-                                <div className="pdp-col-empty">
-                                  <span>Tapşırıq yoxdur</span>
-                                </div>
+                            {/* Rol və Əməliyyatlar */}
+                            <div className="pdp-member-actions-row">
+                              {canManageThisMember ? (
+                                <>
+                                  <select
+                                    className="pdp-member-role-select"
+                                    value={m.role}
+                                    disabled={isLoadingThisMember}
+                                    onChange={(e) => {
+                                      const val = Number(e.target.value) as 2 | 3 | 4;
+                                      handleRoleChange(m.userId, val);
+                                    }}
+                                    title="Üzvün rolunu dəyiş"
+                                  >
+                                    <option value={2}>Menecer</option>
+                                    <option value={3}>İstifadəçi</option>
+                                    <option value={4}>Ghost</option>
+                                  </select>
+
+                                  <button
+                                    type="button"
+                                    className="pdp-member-delete-btn"
+                                    disabled={isLoadingThisMember}
+                                    onClick={() => {
+                                      setMemberActionError('');
+                                      setMemberToDelete({ id: m.userId, name: m.name });
+                                    }}
+                                    title="Üzvü layihədən çıxar"
+                                  >
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                      <polyline points="3 6 5 6 21 6" />
+                                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                      <line x1="10" y1="11" x2="10" y2="17" />
+                                      <line x1="14" y1="11" x2="14" y2="17" />
+                                    </svg>
+                                    Sil
+                                  </button>
+                                </>
                               ) : (
-                                colTasks.map(task => (
-                                  <TaskCard
-                                    key={task.id}
-                                    task={task}
-                                    onOpen={handleTaskOpen}
-                                  />
-                                ))
+                                <span className="pdp-member-static-role">
+                                  {m.role === 2 ? 'Menecer' : m.role === 4 ? 'Ghost' : 'İstifadəçi'}
+                                </span>
                               )}
                             </div>
                           </div>
-                        );
-                      })}
-                    </div>
-                  )}
-
-                  {/* ── Chat tab-ı ── */}
-                  {activeTab === 'chat' && (
-                    <div className="pdp-chat-wrap">
-                      <ChatPanel
-                        projectId={projectId}
-                        currentUserId={currentUserId}
-                        projectMembers={normalizedMembers}
-                      />
-                    </div>
-                  )}
-
-                  {/* ── Üzvlər tab-ı ── */}
-                  {activeTab === 'members' && (
-                    <div className="pdp-members-tab">
-                      {normalizedMembers.length === 0 ? (
-                        <div className="pdp-col-empty">
-                          <span>Üzv siyahısı tapılmadı</span>
                         </div>
-                      ) : (
-                        <div className="pdp-members-grid">
-                          {normalizedMembers.map(m => {
-                            const isOnline = onlineUserIds.has(m.userId);
-                            return (
-                              <div key={m.userId} className={`pdp-member-card ${isOnline ? 'pdp-member-card--online' : ''}`}>
-                                <div className="pdp-member-avatar-wrap">
-                                  <div className="pdp-member-avatar">
-                                    {m.name.charAt(0).toUpperCase()}
-                                  </div>
-                                  <span className={`pdp-member-presence-dot ${isOnline ? 'pdp-member-presence-dot--online' : ''}`} />
-                                </div>
-                                <div className="pdp-member-details">
-                                  <div className="pdp-member-name-row">
-                                    <span className="pdp-member-name">{m.name}</span>
-                                    {m.userId === currentUserId && (
-                                      <span className="pdp-member-self-tag">Siz</span>
-                                    )}
-                                  </div>
-                                  <span className="pdp-member-status-text">
-                                    {isOnline ? '🟢 Onlayn' : '⚪ Oflayn'}
-                                  </span>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </>
-              );
-            })()}
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
           </>
         )}
       </main>
+
+      {/* ── Üzv Silmə Təsdiq Dialoqu ── */}
+      {memberToDelete && (
+        <div className="pdp-confirm-overlay" onClick={() => !memberActionLoadingId && setMemberToDelete(null)}>
+          <div className="pdp-confirm-modal" onClick={e => e.stopPropagation()}>
+            <div className="pdp-confirm-icon pdp-confirm-icon--danger">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+              </svg>
+            </div>
+            <h3 className="pdp-confirm-title">Üzvü sil</h3>
+            <p className="pdp-confirm-desc">
+              <strong>{memberToDelete.name}</strong> adlı üzvü bu layihədən silmək istədiyinizə əminsiniz?
+            </p>
+            {memberActionError && (
+              <div className="pdp-confirm-error">
+                {memberActionError}
+              </div>
+            )}
+            <div className="pdp-confirm-actions">
+              <button
+                type="button"
+                className="pdp-confirm-cancel"
+                disabled={Boolean(memberActionLoadingId)}
+                onClick={() => setMemberToDelete(null)}
+              >
+                Ləğv et
+              </button>
+              <button
+                type="button"
+                className="pdp-confirm-danger-btn"
+                disabled={Boolean(memberActionLoadingId)}
+                onClick={confirmRemoveMember}
+              >
+                {memberActionLoadingId ? 'Silinir...' : 'Bəli, Sil'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Layihəni Bağlamaq Təsdiq Dialoqu ── */}
+      {showCloseProjectConfirm && (
+        <div className="pdp-confirm-overlay" onClick={() => !closingProject && setShowCloseProjectConfirm(false)}>
+          <div className="pdp-confirm-modal" onClick={e => e.stopPropagation()}>
+            <div className="pdp-confirm-icon pdp-confirm-icon--warning">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+            </div>
+            <h3 className="pdp-confirm-title">Layihəni bağla</h3>
+            <p className="pdp-confirm-desc">
+              Layihəni bağlamaq istədiyinizə əminsiniz? Bütün tapşırıqlar bitmiş olmalıdır.
+            </p>
+            {closeProjectError && (
+              <div className="pdp-confirm-error-alert" role="alert">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+                <span>{closeProjectError}</span>
+              </div>
+            )}
+            <div className="pdp-confirm-actions">
+              <button
+                type="button"
+                className="pdp-confirm-cancel"
+                disabled={closingProject}
+                onClick={() => setShowCloseProjectConfirm(false)}
+              >
+                Ləğv et
+              </button>
+              <button
+                type="button"
+                className="pdp-confirm-primary-btn"
+                disabled={closingProject}
+                onClick={handleCloseProjectConfirm}
+              >
+                {closingProject ? 'Bağlanır...' : 'Bəli, Layihəni bağla'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Task detal modali ── */}
       {selectedTask && (
         <TaskDetailModal
           task={selectedTask}
           projectId={projectId}
+          userRole={userRole}
+          isManager={isManager}
+          members={normalizedMembers}
           onClose={handleModalClose}
           onStatusChanged={handleStatusChanged}
+        />
+      )}
+
+      {/* ── Yeni Task Yaratma Modalı ── */}
+      {showCreateTaskModal && (
+        <CreateTaskModal
+          projectId={projectId}
+          currentUserId={currentUserId}
+          userRole={userRole}
+          members={normalizedMembers}
+          onClose={() => setShowCreateTaskModal(false)}
+          onTaskCreated={handleTaskCreated}
+        />
+      )}
+
+      {/* ── Üzv Əlavə Etmə Modalı ── */}
+      {showAddMemberModal && (
+        <AddMemberModal
+          projectId={projectId}
+          existingMemberIds={existingMemberIds}
+          onClose={() => setShowAddMemberModal(false)}
+          onMemberAdded={handleMemberAdded}
         />
       )}
     </div>

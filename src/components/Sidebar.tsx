@@ -3,7 +3,7 @@ import { logout, type User } from '../api/client';
 import NotificationBell from './NotificationBell';
 import './Sidebar.css';
 
-type ActiveView = 'dashboard' | 'projects' | 'projectDetail';
+type ActiveView = 'dashboard' | 'projects' | 'projectDetail' | 'notifications';
 
 interface NavItem {
   id: string;
@@ -34,6 +34,13 @@ const IconDashboard = () => (
 const IconProjects = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
     <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+  </svg>
+);
+
+const IconNotifications = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+    <path d="M13.73 21a2 2 0 0 1-3.46 0" />
   </svg>
 );
 
@@ -72,10 +79,11 @@ function avatarLetter(user: User): string {
 // ── Menyu elementləri ─────────────────────────────────────────────────────────
 
 const NAV_ITEMS: NavItem[] = [
-  { id: 'dashboard',      label: 'Dashboard',      view: 'dashboard', icon: <IconDashboard /> },
-  { id: 'projects',       label: 'Layihələr',       view: 'projects',  icon: <IconProjects /> },
-  { id: 'my-tasks',       label: 'Tapşırıqlarım',  icon: <IconTasks />, soon: true },
-  { id: 'chat',           label: 'Chat',            icon: <IconChat />,  soon: true },
+  { id: 'dashboard',      label: 'Dashboard',      view: 'dashboard',     icon: <IconDashboard /> },
+  { id: 'projects',       label: 'Layihələr',       view: 'projects',      icon: <IconProjects /> },
+  { id: 'notifications',  label: 'Bildirişlər',    view: 'notifications', icon: <IconNotifications /> },
+  { id: 'my-tasks',       label: 'Tapşırıqlarım',  icon: <IconTasks />,   soon: true },
+  { id: 'chat',           label: 'Chat',            icon: <IconChat />,    soon: true },
 ];
 
 // ── Komponent ─────────────────────────────────────────────────────────────────
